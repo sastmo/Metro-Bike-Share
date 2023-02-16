@@ -14,8 +14,10 @@ Related codes are stored in Processing_station_class.sql with a suffix to show t
 Related codes are stored in Processing_duration_class.sql with a suffix to show the year. 
 # 3- Data Preparation for Analysis:
 Using a query, the edited trips table and station table have been joined. 
-Also, previous classifications were performed for stations, and trips have been added to the tables. 
+Also, previous classifications were performed for stations, and trips have been added to the tables.
+The result of the query have been kept in the four VIEWs called t_19, t_20, t_21 and t_22 for the years 2019, 2020, 2021 and 2022, respectively exporting the data to Tableau for visualization.
 Related codes are stored in Preparation_Analysis.sql with a suffix to show the year. 
+
 # 4- Demographic data 
 Queroes in the Population_zipe_code.sql has been used to bring all demographic data to the database.
 # 5- Public Transportation Station data
