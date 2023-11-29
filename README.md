@@ -1,3 +1,11 @@
+![Data Model](https://img.shields.io/badge/Data_Model-Information-blue)
+![Data Analysis](https://img.shields.io/badge/Data_Analysis-Analysis-blue)
+![Data Visualization](https://img.shields.io/badge/Data_Visualization-Visualization-blue)
+![Tableau](https://img.shields.io/badge/Tableau-Tools-blue)
+![SQL](https://img.shields.io/badge/SQL-Database-blue)
+![PL/SQL](https://img.shields.io/badge/PL_SQL-Programming-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+
 # Metro Bike Share Insights: Navigating Data, Discovery, and Urban Mobility
 
 ## 🚀 Welcome to the Metro Bike Share Odyssey on GitHub!
