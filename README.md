@@ -1,6 +1,8 @@
 # Metro Bike Share Insights: Navigating Data, Discovery, and Urban Mobility
 
 ## 🚀 Welcome to the Metro Bike Share Odyssey on GitHub!
+![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/f87dcf6e-b35a-4442-b1d2-02334a3016bb)
+
 
 Dive into the vibrant world of Los Angeles' bike-sharing system with the Metro Bike Share Insights project. This README guides you through our exploration of urban mobility data. The journey is divided into 6 insightful sections:
 
@@ -35,7 +37,7 @@ Our journey starts with constructing a robust data model using Star Schema, data
 
 ## 🚴‍♂️ 2. Daily and Seasonality Analysis: Unveiling the Pulse of the City
 
-![Daily Trips Pattern](Daily_Trips_Pattern.png)
+![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/9a634896-7444-43bf-b9dd-d548b826936e)
 
 This section explores the impact of the pandemic on bike-sharing and uncovers the daily and monthly trip patterns. It's an analysis of how seasonality and external influences shape Metro Bike Share usage.
 
@@ -45,7 +47,7 @@ This section explores the impact of the pandemic on bike-sharing and uncovers th
 
 ## 🔍 3. Trips Analysis: Deciphering the Why Behind Each Ride
 
-![Trips Duration Analysis](Trips_Duration_Analysis.png)
+![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/d60be258-ed9f-4107-8076-a85b7640072a)
 
 We delve into trip categories and purposes, employing SQL and K-means to understand rider behaviors and preferences. This analysis is key to rethinking strategies for pricing, availability, and customer engagement.
 
@@ -55,7 +57,7 @@ We delve into trip categories and purposes, employing SQL and K-means to underst
 
 ## 🚲 4. Exploring and Analyzing Fleet: The Backbone of the Program
 
-![Average Weekly Rides per Vehicle](Average_Weekly_Rides.png)
+![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/0a16c72d-e7cc-4c14-967e-410b3d9ba5b5)
 
 Focusing on the fleet, we analyze the roles of different bike types in the program. This chapter provides insights into resource utilization and system performance.
 
@@ -65,7 +67,7 @@ Focusing on the fleet, we analyze the roles of different bike types in the progr
 
 ## 🌆 5. Station Insights and Urban Dynamics-1: Mapping the Landscape
 
-![Trips Analysis by Regions](Trips_Analysis_by_Regions.png)
+![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/758df468-d9c8-4fde-9e80-a33ce4ca08b2)
 
 We zoom into the bike stations, analyzing their interplay with public transportation and demographics. This section reveals user behaviors and preferences.
 
@@ -75,7 +77,7 @@ We zoom into the bike stations, analyzing their interplay with public transporta
 
 ## 🌍 6. Station Insights and Urban Dynamics-2: Deepening the Exploration
 
-![Low-Performance Public Transport Stations](Low_Performance_Stations.png)
+![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/24b9bc81-afb7-4eed-b067-bb99414750bd)
 
 We connect demographic factors, public transportation, and station characteristics to bike-sharing usage, unveiling urban mobility's evolving nature.
 
@@ -90,7 +92,3 @@ We're gearing up for advanced statistical analyses and predictive modeling to op
 ---
 
 **Join us on this data-driven adventure and discover the story of urban mobility in Los Angeles. Stay tuned for more insights and updates!** 🚴‍♀️🌟🔍
-
----
-
-(Note: Replace placeholder links like `Data_Model_Link` with actual URLs to your project sections in the README.)
