@@ -71,7 +71,7 @@ Our journey starts with constructing a robust data model using Star Schema, data
 
 This section explores the impact of the pandemic on bike-sharing and uncovers the daily and monthly trip patterns. It's an analysis of how seasonality and external influences shape Metro Bike Share usage.
 
-[🔗 Daily and Seasonality Analysis Full Insights](Daily_Seasonality_Link)
+[🔗 Daily and Seasonality Analysis Full Insights](https://www.notion.so/Daily-and-Seasonality-Analysis-321469023c4d45fc996e7a28651c3f92?pvs=4)
 
 ---
 
@@ -81,7 +81,7 @@ This section explores the impact of the pandemic on bike-sharing and uncovers th
 
 We delve into trip categories and purposes, employing SQL and K-means to understand rider behaviors and preferences. This analysis is key to rethinking strategies for pricing, availability, and customer engagement.
 
-[🔗 Detailed Trips Analysis](Trips_Analysis_Link)
+[🔗 Detailed Trips Analysis](https://www.notion.so/Trips-Analysis-efa31fa491f84fd1b387c9d7deaaa80a?pvs=4)
 
 ---
 
@@ -91,7 +91,7 @@ We delve into trip categories and purposes, employing SQL and K-means to underst
 
 Focusing on the fleet, we analyze the roles of different bike types in the program. This chapter provides insights into resource utilization and system performance.
 
-[🔗 Fleet Analysis Overview](Fleet_Analysis_Link)
+[🔗 Fleet Analysis Overview](https://www.notion.so/Exploring-and-Analyzing-Fleet-Uncovering-Insights-and-Trends-3b8ae9504fed413fbb59b4560b274d81?pvs=4)
 
 ---
 
@@ -101,7 +101,7 @@ Focusing on the fleet, we analyze the roles of different bike types in the progr
 
 We zoom into the bike stations, analyzing their interplay with public transportation and demographics. This section reveals user behaviors and preferences.
 
-[🔗 Station Insights and Urban Dynamics-1](Station_Insights_1_Link)
+[🔗 Station Insights and Urban Dynamics-1](https://www.notion.so/Station-Insights-and-Urban-Dynamics-1-c10626aec2514683b745fd3bbc6a825b?pvs=4)
 
 ---
 
@@ -111,7 +111,7 @@ We zoom into the bike stations, analyzing their interplay with public transporta
 
 We connect demographic factors, public transportation, and station characteristics to bike-sharing usage, unveiling urban mobility's evolving nature.
 
-[🔗 Station Insights and Urban Dynamics-2](Station_Insights_2_Link)
+[🔗 Station Insights and Urban Dynamics-2](https://www.notion.so/Station-Insights-and-Urban-Dynamics-2-298a6c6510814458b4986be617498a78?pvs=4)
 
 ---
 
