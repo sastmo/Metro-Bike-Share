@@ -61,7 +61,7 @@ Our journey starts with constructing a robust data model using Star Schema, data
 - **File**: **`Public_transportation_stations.sql`**
 - **Details**: Queries for importing public transportation data in JSON format.
 
-[🔗 Data Model Detailed Overview](Data_Model_Link)
+[🔗 Data Model Detailed Overview](https://www.notion.so/1-Data-Model-2b1381a463244351ba7639e905ddcb0c?pvs=4)
 
 ---
 
