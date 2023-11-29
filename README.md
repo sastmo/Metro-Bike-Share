@@ -25,11 +25,32 @@ Our journey starts with constructing a robust data model using Star Schema, data
 
 **GitHub Navigation:**
 
-- **Importing and Cleaning**: SQL codes for trip and station data.
-- **Data Processing**: Station and trip duration classification files.
-- **Data Preparation for Analysis**: Joins tables for Tableau export.
-- **Demographic Data**: Queries for demographic data addition.
-- **Public Transportation Station Data**: JSON format public transportation data queries.
+🛠️This project analyzes approximately 1 million trips from the beginning of 2019 to the third quarter of 2022 in the Los Angeles Metro Bike Share system, visualized using Tableau and connected through PostgreSQL. Below is a brief guide to navigating through the repository:
+
+**1️⃣ Importing and Cleaning:**
+
+- **File**: **`metro_bike_share.sql`**
+- **Details**: Contains SQL codes for importing and cleaning trip and station data. Separate files for each quarter are provided.
+
+**2️⃣ Data Processing:**
+
+- **Station Classification**: **`Processing_station_class.sql`** with year suffix.
+- **Trip Duration Classification**: **`Processing_duration_class.sql`** with year suffix.
+
+**3️⃣ Data Preparation for Analysis:**
+
+- **File**: **`Preparation_Analysis.sql`**
+- **Details**: Joins edited trip and station tables, includes previous classifications, and creates VIEWs for each year (2019-2022) for Tableau export.
+
+**4️⃣ Demographic Data:**
+
+- **File**: **`Population_zip_code.sql`**
+- **Details**: Queries for adding demographic data.
+
+**5️⃣ Public Transportation Station Data:**
+
+- **File**: **`Public_transportation_stations.sql`**
+- **Details**: Queries for importing public transportation data in JSON format.
 
 [🔗 Data Model Detailed Overview](Data_Model_Link)
 
