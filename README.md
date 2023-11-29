@@ -16,8 +16,9 @@ Let's begin!
 ---
 
 ## 🌐 1. Data Model: Crafting the Foundation
+![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/e030c7b9-96b1-4ff6-9469-09a9698c2011)
 
-![Database ER diagram (crow's foot).png](https://prod-files-secure.s3.us-west-2.amazonaws.com/3eb2ed49-1d0b-425d-b14f-22f236298e86/a1f54f49-f428-4f20-876b-ee86a7ebf6f5/Database_ER_diagram_(crows_foot).png)
+
 Our journey starts with constructing a robust data model using Star Schema, data cleaning, and format unifying. We employed Common Table Expressions for efficient data handling and K-means clustering for insightful bike-sharing pattern analysis.
 
 **GitHub Navigation:**
