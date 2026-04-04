@@ -1,0 +1,13 @@
+.DS_Store
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Keep large working datasets local by default.
+data/raw/**/*.csv
+data/raw/**/*.json
+data/raw/**/*.Json
+data/reference/**/*.csv
+data/reference/**/*.json
+data/reference/**/*.Json
+!data/**/.gitkeep

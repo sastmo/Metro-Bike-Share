@@ -1,124 +1,118 @@
-![Data Model](https://img.shields.io/badge/Data_Model-Information-ff69b4)
-![Data Analysis](https://img.shields.io/badge/Data_Analysis-Analysis-9cf)
-![Data Visualization](https://img.shields.io/badge/Data_Visualization-Visualization-yellow)
-![Tableau](https://img.shields.io/badge/Tableau-Tools-orange)
-![SQL](https://img.shields.io/badge/SQL-Database-blueviolet)
-![PL/SQL](https://img.shields.io/badge/PL_SQL-Programming-green)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-ff4500)
+# Metro Bike Share Warehouse
 
+SQL-first mobility analytics project built around PostgreSQL, warehouse-style data modeling, and database-side feature engineering.
 
-# Metro Bike Share Insights: Navigating Data, Discovery, and Urban Mobility
+This repository started as an older analysis project. It has now been restructured into a cleaner portfolio project that is easier to explain, maintain, and extend. The current phase is focused on repository modernization, project structure, documentation, and SQL asset organization. Predictive modeling and time-series forecasting are intentionally deferred to phase 2.
 
-## 🚀 Welcome to the Metro Bike Share Odyssey on GitHub!
-![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/f87dcf6e-b35a-4442-b1d2-02334a3016bb)
+## Why this project is strong for a portfolio
 
+- It keeps heavy transformation logic inside PostgreSQL instead of moving large tables back and forth between the database and Python.
+- It shows database-centric feature engineering, including SQL-based trip cleaning, dimension enrichment, and K-means style clustering executed close to the data.
+- It is positioned as a data engineering and analytics engineering project, not only a dashboard or notebook exercise.
+- It now includes project contracts, repository validation, and basic automated tests so the codebase feels more production-minded.
 
-Dive into the vibrant world of Los Angeles' bike-sharing system with the Metro Bike Share Insights project. This README guides you through our exploration of urban mobility data. The journey is divided into 6 insightful sections:
+## Current project focus
 
-1. **Data Model**
-2. **Daily and Seasonality Analysis**
-3. **Trips Analysis**
-4. **Exploring and Analyzing Fleet**
-5. **Station Insights and Urban Dynamics-1**
-6. **Station Insights and Urban Dynamics-2**
+Phase 1 is about making the repository clean, credible, and extensible:
 
-Let's begin!
+- reorganize the file tree around data warehouse layers
+- preserve the original SQL work without leaving the repo flat and difficult to navigate
+- make the project easier to present to employers as a SQL-first engineering case study
+- create space for a second phase focused on forecasting, prediction, and deeper data quality work
 
----
+At this stage, the goal is not to claim that every source file is perfect. The goal is to present a stronger technical foundation and a clearer architecture.
 
-## 🌐 1. Data Model: Crafting the Foundation
-![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/e030c7b9-96b1-4ff6-9469-09a9698c2011)
+## Repository layout
 
+```text
+.
+├── README.md
+├── Makefile
+├── data
+│   ├── README.md
+│   ├── raw
+│   │   ├── stations
+│   │   └── trips
+│   └── reference
+│       ├── census
+│       ├── geography
+│       └── transport
+├── docs
+│   ├── architecture.md
+│   └── legacy-inventory.md
+├── scripts
+│   └── validate_repo.py
+├── sql
+│   ├── legacy
+│   │   ├── foundation
+│   │   ├── staging
+│   │   ├── features
+│   │   ├── marts
+│   │   └── enrichment
+│   └── warehouse
+│       ├── contracts
+│       ├── orchestration
+│       └── utilities
+└── tests
+    └── test_repository_contract.py
+```
 
-Our journey starts with constructing a robust data model using Star Schema, data cleaning, and format unifying. We employed Common Table Expressions for efficient data handling and K-means clustering for insightful bike-sharing pattern analysis.
+## Architecture summary
 
-**GitHub Navigation:**
+The repository now tells a clearer warehouse story:
 
-🛠️This project analyzes approximately 1 million trips from the beginning of 2019 to the third quarter of 2022 in the Los Angeles Metro Bike Share system, visualized using Tableau and connected through PostgreSQL. Below is a brief guide to navigating through the repository:
+1. Raw data lands in `data/raw/` and reference inputs live in `data/reference/`.
+2. Legacy SQL has been preserved under `sql/legacy/`, grouped by layer instead of left flat at the repo root.
+3. Reusable warehouse assets live under `sql/warehouse/`, including contracts, utilities, and runbooks.
+4. Documentation under `docs/` explains the technical positioning and future roadmap.
+5. Validation and unit tests help protect the repository structure as the project grows.
 
-**1️⃣ Importing and Cleaning:**
+## What makes this project different technically
 
-- **File**: **`metro_bike_share.sql`**
-- **Details**: Contains SQL codes for importing and cleaning trip and station data. Separate files for each quarter are provided.
+- SQL-first design: the project emphasizes pushing transformations and feature generation down into PostgreSQL.
+- Warehouse framing: raw inputs, staging logic, feature engineering, marts, and enrichment are separated conceptually.
+- Database-side clustering: the K-means scripts demonstrate an uncommon but valuable database-centric approach.
+- Portfolio positioning: this is closer to analytics engineering, data warehousing, and data platform work than a simple one-off analysis.
 
-**2️⃣ Data Processing:**
+## Key repository assets
 
-- **Station Classification**: **`Processing_station_class.sql`** with year suffix.
-- **Trip Duration Classification**: **`Processing_duration_class.sql`** with year suffix.
+- `sql/legacy/`: preserved original SQL, now grouped into logical layers
+- `sql/warehouse/contracts/source_manifest.json`: high-level inventory of source domains and warehouse assets
+- `sql/warehouse/utilities/points.sql`: reusable point helper functions used by the clustering logic
+- `sql/warehouse/orchestration/pipeline_runbook.md`: practical run order and modernization notes
+- `scripts/validate_repo.py`: repository contract validation
+- `tests/test_repository_contract.py`: lightweight automated tests
 
-**3️⃣ Data Preparation for Analysis:**
+## Validation
 
-- **File**: **`Preparation_Analysis.sql`**
-- **Details**: Joins edited trip and station tables, includes previous classifications, and creates VIEWs for each year (2019-2022) for Tableau export.
+```bash
+python3 scripts/validate_repo.py
+python3 -m unittest discover -s tests -p 'test_*.py'
+```
 
-**4️⃣ Demographic Data:**
+## Project positioning
 
-- **File**: **`Population_zip_code.sql`**
-- **Details**: Queries for adding demographic data.
+This project is best presented as:
 
-**5️⃣ Public Transportation Station Data:**
+- a PostgreSQL-first mobility warehouse case study
+- an analytics engineering project with strong SQL depth
+- a data engineering portfolio piece that intentionally minimizes unnecessary database-to-Python data movement
 
-- **File**: **`Public_transportation_stations.sql`**
-- **Details**: Queries for importing public transportation data in JSON format.
+That positioning is important. The value here is not only the final insights. The value is the database design mindset, the operational structure, and the ability to engineer analysis-ready data products inside the warehouse layer.
 
-[🔗 Data Model Detailed Overview](https://www.notion.so/1-Data-Model-2b1381a463244351ba7639e905ddcb0c?pvs=4)
+## Phase 2 roadmap
 
----
+The next phase can build on this structure without redoing the repository again:
 
-## 🚴‍♂️ 2. Daily and Seasonality Analysis: Unveiling the Pulse of the City
+- data source reconciliation and stronger data quality checks
+- canonical warehouse schemas and standardized naming conventions across all SQL assets
+- time-series forecasting and prediction pipelines
+- BI-facing marts or semantic models for reporting tools
+- optional orchestration around reproducible database runs
 
-![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/9a634896-7444-43bf-b9dd-d548b826936e)
+## Notes
 
-This section explores the impact of the pandemic on bike-sharing and uncovers the daily and monthly trip patterns. It's an analysis of how seasonality and external influences shape Metro Bike Share usage.
+- Large raw and reference datasets are kept local by default and ignored from Git through `.gitignore`.
+- Some legacy enrichment scripts still depend on external inputs that are not yet packaged in the repository.
+- The original SQL work is preserved intentionally so the project still shows the depth of the first implementation.
 
-[🔗 Daily and Seasonality Analysis Full Insights](https://www.notion.so/Daily-and-Seasonality-Analysis-321469023c4d45fc996e7a28651c3f92?pvs=4)
-
----
-
-## 🔍 3. Trips Analysis: Deciphering the Why Behind Each Ride
-
-![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/d60be258-ed9f-4107-8076-a85b7640072a)
-
-We delve into trip categories and purposes, employing SQL and K-means to understand rider behaviors and preferences. This analysis is key to rethinking strategies for pricing, availability, and customer engagement.
-
-[🔗 Detailed Trips Analysis](https://www.notion.so/Trips-Analysis-efa31fa491f84fd1b387c9d7deaaa80a?pvs=4)
-
----
-
-## 🚲 4. Exploring and Analyzing Fleet: The Backbone of the Program
-
-![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/0a16c72d-e7cc-4c14-967e-410b3d9ba5b5)
-
-Focusing on the fleet, we analyze the roles of different bike types in the program. This chapter provides insights into resource utilization and system performance.
-
-[🔗 Fleet Analysis Overview](https://www.notion.so/Exploring-and-Analyzing-Fleet-Uncovering-Insights-and-Trends-3b8ae9504fed413fbb59b4560b274d81?pvs=4)
-
----
-
-## 🌆 5. Station Insights and Urban Dynamics-1: Mapping the Landscape
-
-![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/758df468-d9c8-4fde-9e80-a33ce4ca08b2)
-
-We zoom into the bike stations, analyzing their interplay with public transportation and demographics. This section reveals user behaviors and preferences.
-
-[🔗 Station Insights and Urban Dynamics-1](https://www.notion.so/Station-Insights-and-Urban-Dynamics-1-c10626aec2514683b745fd3bbc6a825b?pvs=4)
-
----
-
-## 🌍 6. Station Insights and Urban Dynamics-2: Deepening the Exploration
-
-![image](https://github.com/sastmo/Metro-Bike-Share/assets/116411251/24b9bc81-afb7-4eed-b067-bb99414750bd)
-
-We connect demographic factors, public transportation, and station characteristics to bike-sharing usage, unveiling urban mobility's evolving nature.
-
-[🔗 Station Insights and Urban Dynamics-2](https://www.notion.so/Station-Insights-and-Urban-Dynamics-2-298a6c6510814458b4986be617498a78?pvs=4)
-
----
-
-## 🔜 What's Next?
-
-We're gearing up for advanced statistical analyses and predictive modeling to optimize the Metro Bike Share program for Los Angeles' dynamic landscape.
-
----
-
-**Join us on this data-driven adventure and discover the story of urban mobility in Los Angeles. Stay tuned for more insights and updates!** 🚴‍♀️🌟🔍

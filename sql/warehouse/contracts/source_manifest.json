@@ -1,0 +1,79 @@
+{
+  "project_name": "metro-bike-share-warehouse",
+  "version": 1,
+  "focus": "SQL-first mobility warehouse modernization",
+  "domains": [
+    {
+      "name": "trip_facts_raw",
+      "layer": "raw",
+      "path": "data/raw/trips",
+      "pattern": "*.csv",
+      "description": "Quarterly Metro Bike Share trip extracts kept as local working data."
+    },
+    {
+      "name": "station_snapshots_raw",
+      "layer": "raw",
+      "path": "data/raw/stations",
+      "pattern": "*.csv",
+      "description": "Station snapshots used by the warehouse bootstrap and enrichment logic."
+    },
+    {
+      "name": "demographic_reference",
+      "layer": "reference",
+      "path": "data/reference/census",
+      "pattern": "*.csv",
+      "description": "Census and demographic enrichment sources."
+    },
+    {
+      "name": "geographic_reference",
+      "layer": "reference",
+      "path": "data/reference/geography",
+      "pattern": "*.json",
+      "description": "Geographic reference files and supporting context."
+    },
+    {
+      "name": "transport_reference",
+      "layer": "reference",
+      "path": "data/reference/transport",
+      "pattern": "*.Json",
+      "description": "Transit-related source files used for station enrichment."
+    }
+  ],
+  "warehouse_assets": [
+    {
+      "name": "source_manifest",
+      "path": "sql/warehouse/contracts/source_manifest.json"
+    },
+    {
+      "name": "point_math_utility",
+      "path": "sql/warehouse/utilities/points.sql"
+    },
+    {
+      "name": "pipeline_runbook",
+      "path": "sql/warehouse/orchestration/pipeline_runbook.md"
+    }
+  ],
+  "external_dependencies": [
+    {
+      "name": "zip_code_location_feed",
+      "status": "not_packaged_yet",
+      "note": "Legacy population enrichment expects an auxiliary zip code location file."
+    },
+    {
+      "name": "zip_code_land_feed",
+      "status": "not_packaged_yet",
+      "note": "Legacy population enrichment expects a land-area reference file."
+    },
+    {
+      "name": "metro_station_feed",
+      "status": "not_packaged_yet",
+      "note": "Legacy transit enrichment expects a Metro station export in a historical format."
+    },
+    {
+      "name": "metrolink_station_feed",
+      "status": "not_packaged_yet",
+      "note": "Legacy transit enrichment expects a Metrolink station export in a historical format."
+    }
+  ]
+}
+
