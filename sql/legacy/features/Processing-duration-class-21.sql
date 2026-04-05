@@ -5,9 +5,7 @@ set jit = off;
 
 --  ➊ a user-defined equality operator: = :: point × point → bool
 --    (and aggregate AVG :: bag(point) → point)
-\i points.sql
-
-\i Users/admin/OneDrive/Desktop/points.sql
+\i sql/warehouse/utilities/points.sql
 
 
 -- Set of points P that we will cluster

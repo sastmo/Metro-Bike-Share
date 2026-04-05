@@ -1,4 +1,5 @@
---NOTE Import TABALES FROM 2019-q1 TO 2022-q3 
+-- NOTE: run from the repository root so the relative data paths resolve correctly.
+-- NOTE Import TABALES FROM 2019-q1 TO 2022-q3 
 
 DROP TYPE IF EXISTS trips CASCADE;
 CREATE TYPE trips AS (
@@ -35,105 +36,105 @@ CREATE TYPE stations AS (
 DROP TABLE IF EXISTS trips_2019_q1 CASCADE;
 CREATE TABLE trips_2019_q1 OF trips;
 ALTER TABLE  trips_2019_q1 ADD PRIMARY KEY (trip_id);
-\copy trips_2019_q1 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2019-q1.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2019_q1 FROM 'data/raw/trips/metro-bike-share-trips-2019-q1.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2019-q2
 
 DROP TABLE IF EXISTS trips_2019_q2 CASCADE;
 CREATE TABLE trips_2019_q2 OF trips;
 ALTER TABLE  trips_2019_q2 ADD PRIMARY KEY (trip_id);
-\copy trips_2019_q2 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2019-q2.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2019_q2 FROM 'data/raw/trips/metro-bike-share-trips-2019-q2.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2019-q3
 
 DROP TABLE IF EXISTS trips_2019_q3 CASCADE;
 CREATE TABLE trips_2019_q3 OF trips;
 ALTER TABLE  trips_2019_q3 ADD PRIMARY KEY (trip_id);
-\copy trips_2019_q3 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2019-q3.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2019_q3 FROM 'data/raw/trips/metro-bike-share-trips-2019-q3.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2019-q4
 
 DROP TABLE IF EXISTS trips_2019_q4 CASCADE;
 CREATE TABLE trips_2019_q4 OF trips;
 ALTER TABLE  trips_2019_q4 ADD PRIMARY KEY (trip_id);
-\copy trips_2019_q4 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2019-q4.csv' WITH (FORMAT csv, HEADER TRUE);
-/
+\copy trips_2019_q4 FROM 'data/raw/trips/metro-bike-share-trips-2019-q4.csv' WITH (FORMAT csv, HEADER TRUE);
+
 -- Import metro-trips-2020-q1
 
 DROP TABLE IF EXISTS trips_2020_q1 CASCADE;
 CREATE TABLE trips_2020_q1 OF trips;
 ALTER TABLE  trips_2020_q1 ADD PRIMARY KEY (trip_id);
-\copy trips_2020_q1 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2020-q1.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2020_q1 FROM 'data/raw/trips/metro-bike-share-trips-2020-q1.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2020-q2
 
 DROP TABLE IF EXISTS trips_2020_q2 CASCADE;
 CREATE TABLE trips_2020_q2 OF trips;
 ALTER TABLE  trips_2020_q2 ADD PRIMARY KEY (trip_id);
-\copy trips_2020_q2 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2020-q2.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2020_q2 FROM 'data/raw/trips/metro-trips-2020-q2-v2.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2020-q3
 
 DROP TABLE IF EXISTS trips_2020_q3 CASCADE;
 CREATE TABLE trips_2020_q3 OF trips;
 ALTER TABLE  trips_2020_q3 ADD PRIMARY KEY (trip_id);
-\copy trips_2020_q3 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2020-q3.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2020_q3 FROM 'data/raw/trips/metro-trips-2020-q3.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2020-q4
 
 DROP TABLE IF EXISTS trips_2020_q4 CASCADE;
 CREATE TABLE trips_2020_q4 OF trips;
 ALTER TABLE  trips_2020_q4 ADD PRIMARY KEY (trip_id);
-\copy trips_2020_q4 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2020-q4.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2020_q4 FROM 'data/raw/trips/metro-trips-2020-q4.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2021-q1
 
 DROP TABLE IF EXISTS trips_2021_q1 CASCADE;
 CREATE TABLE trips_2021_q1 OF trips;
 ALTER TABLE  trips_2021_q1 ADD PRIMARY KEY (trip_id);
-\copy trips_2021_q1 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2021-q1.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2021_q1 FROM 'data/raw/trips/metro-trips-2021-q1.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2021-q2
 
 DROP TABLE IF EXISTS trips_2021_q2 CASCADE;
 CREATE TABLE trips_2021_q2 OF trips;
 ALTER TABLE  trips_2021_q2 ADD PRIMARY KEY (trip_id);
-\copy trips_2021_q2 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2021-q2.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2021_q2 FROM 'data/raw/trips/metro-trips-2021-q2.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2021-q3
 
 DROP TABLE IF EXISTS trips_2021_q3 CASCADE;
 CREATE TABLE trips_2021_q3 OF trips;
 ALTER TABLE  trips_2021_q3 ADD PRIMARY KEY (trip_id);
-\copy trips_2021_q3 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2021-q3.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2021_q3 FROM 'data/raw/trips/metro-trips-2021-q3.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2021-q4
 
 DROP TABLE IF EXISTS trips_2021_q4 CASCADE;
 CREATE TABLE trips_2021_q4 OF trips;
 ALTER TABLE  trips_2021_q4 ADD PRIMARY KEY (trip_id);
-\copy trips_2021_q4 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2021-q4.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2021_q4 FROM 'data/raw/trips/metro-trips-2021-q4.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2022-q1
 
 DROP TABLE IF EXISTS trips_2022_q1 CASCADE;
 CREATE TABLE trips_2022_q1 OF trips;
 ALTER TABLE  trips_2022_q1 ADD PRIMARY KEY (trip_id);
-\copy trips_2022_q1 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2022-q1.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2022_q1 FROM 'data/raw/trips/metro-trips-2022-q1.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2022-q2
 
 DROP TABLE IF EXISTS trips_2022_q2 CASCADE;
 CREATE TABLE trips_2022_q2 OF trips;
 ALTER TABLE trips_2022_q2 ADD PRIMARY KEY (trip_id);
-\copy trips_2022_q2 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2022-q2.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2022_q2 FROM 'data/raw/trips/metro-trips-2022-q2.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-trips-2022-q3
 
 DROP TABLE IF EXISTS trips_2022_q3 CASCADE;
 CREATE TABLE trips_2022_q3 OF trips;
 ALTER TABLE  trips_2022_q3 ADD PRIMARY KEY (trip_id);
-\copy trips_2022_q3 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-trips-2022-q3.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy trips_2022_q3 FROM 'data/raw/trips/metro-trips-2022-q3.csv' WITH (FORMAT csv, HEADER TRUE);
 
 -- Import metro-stations-2021
 --All of the stations data exist in the last version of the station table,
@@ -142,7 +143,7 @@ ALTER TABLE  trips_2022_q3 ADD PRIMARY KEY (trip_id);
 DROP TABLE IF EXISTS  metro_stations_2022 CASCADE;
 CREATE TABLE metro_stations_2022 OF stations;
 ALTER TABLE  metro_stations_2022 ADD PRIMARY KEY (Station_ID);
-\copy metro_stations_2022 FROM '/Users/admin/OneDrive/Desktop/Dataset/metro-bike-stations-2022.csv' WITH (FORMAT csv, HEADER TRUE);
+\copy metro_stations_2022 FROM 'data/raw/stations/metro-bike-share-stations-2026-01-01.csv' WITH (FORMAT csv, HEADER TRUE);
 
 ----------------------- Check-id Function------------------
 --Chek the id format and add passed data to the edit table as integer 
