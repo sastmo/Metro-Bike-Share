@@ -15,6 +15,14 @@ from metro_bike_share_forecasting.evaluation.splitting import build_temporal_spl
 from metro_bike_share_forecasting.forecasting.baselines.seasonal_naive import SeasonalNaiveForecaster
 
 
+class _FailingForecaster:
+    def fit(self, history: pd.DataFrame):
+        raise ValueError("synthetic failure")
+
+    def forecast(self, history: pd.DataFrame, horizon: int) -> pd.DataFrame:
+        raise AssertionError("forecast should not be called")
+
+
 class BacktestingTests(unittest.TestCase):
     def test_rolling_backtest_runs_for_baseline_model(self) -> None:
         frame = pd.DataFrame(
@@ -69,6 +77,28 @@ class BacktestingTests(unittest.TestCase):
         self.assertEqual(len(split.train_frame), 164)
         self.assertLess(split.train_frame["bucket_start"].max(), split.validation_frame["bucket_start"].min())
         self.assertLess(split.validation_frame["bucket_start"].max(), split.test_frame["bucket_start"].min())
+
+    def test_run_backtest_skips_failing_models_without_aborting(self) -> None:
+        frame = pd.DataFrame(
+            {
+                "bucket_start": pd.date_range("2023-01-01", periods=40, freq="D"),
+                "trip_count": [10 + (idx % 7) for idx in range(40)],
+                "segment_type": "system_total",
+                "segment_id": "all",
+                "pandemic_phase": "post_pandemic",
+            }
+        )
+        predictions, metrics = run_backtest(
+            frame,
+            {
+                "seasonal_naive": lambda: SeasonalNaiveForecaster("daily"),
+                "broken_model": lambda: _FailingForecaster(),
+            },
+            BacktestConfig(frequency="daily", horizon=7, initial_window=21, step=7, max_folds=2),
+        )
+        self.assertFalse(predictions.empty)
+        self.assertFalse(metrics.empty)
+        self.assertEqual(set(metrics["model_name"]), {"seasonal_naive"})
 
 
 if __name__ == "__main__":

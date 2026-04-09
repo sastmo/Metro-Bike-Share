@@ -51,6 +51,12 @@ class Settings:
             "naive,seasonal_naive,rolling_mean,count_glm,sarimax_fourier,weighted_ensemble",
         )
     )
+    station_enabled_models: Tuple[str, ...] = field(
+        default_factory=lambda: _split_csv_env(
+            "STATION_ENABLED_MODELS",
+            "naive,seasonal_naive,rolling_mean,count_glm,weighted_ensemble",
+        )
+    )
     horizon_map: Dict[str, int] = field(
         default_factory=lambda: {
             "hourly": int(os.getenv("HORIZON_HOURLY", "168")),

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Callable
 
+import numpy as np
 import pandas as pd
 
 from metro_bike_share_forecasting.cleaning.cleaner import clean_trip_data
@@ -52,6 +53,36 @@ MODEL_FAMILY_MAP = {
 }
 
 INTERVAL_LEVELS = (50, 80, 95)
+SUMMARY_METRIC_COLUMNS = (
+    "mae",
+    "rmse",
+    "mape",
+    "smape",
+    "mase",
+    "bias",
+    "pinball_50",
+    "pinball_80",
+    "pinball_95",
+    "coverage_50",
+    "coverage_80",
+    "coverage_95",
+    "width_50",
+    "width_80",
+    "width_95",
+)
+
+
+def _safe_weighted_mean(values: pd.Series, weights: pd.Series) -> float:
+    numeric_values = pd.to_numeric(values, errors="coerce")
+    numeric_weights = pd.to_numeric(weights, errors="coerce").fillna(0.0)
+    mask = numeric_values.notna()
+    numeric_values = numeric_values.loc[mask].astype(float)
+    numeric_weights = numeric_weights.loc[mask].astype(float)
+    if numeric_values.empty:
+        return float("nan")
+    if numeric_weights.sum() <= 0:
+        return float(numeric_values.mean())
+    return float(np.average(numeric_values, weights=numeric_weights))
 
 
 class ForecastingPipeline:
@@ -272,7 +303,7 @@ class ForecastingPipeline:
                         fold_schedule["segment_id"] = str(segment_id)
                         fold_schedule_rows.append(fold_schedule)
 
-                model_factories = self._build_model_factories(frequency, regime_definition)
+                model_factories = self._build_model_factories(frequency, regime_definition, segment_type)
                 if backtest_config is not None:
                     backtest_predictions, backtest_metrics = run_backtest(temporal_split.train_frame, model_factories, backtest_config)
                 else:
@@ -427,9 +458,28 @@ class ForecastingPipeline:
                     ],
                     ignore_index=True,
                 )
+                full_fit_window_start = full_history["bucket_start"].min()
+                full_fit_window_end = full_history["bucket_start"].max()
+                selection_train_window_start = temporal_split.train_frame["bucket_start"].min()
+                selection_train_window_end = temporal_split.train_frame["bucket_start"].max()
+                validation_window_start = temporal_split.validation_frame["bucket_start"].min()
+                validation_window_end = temporal_split.validation_frame["bucket_start"].max()
+                test_window_start = temporal_split.test_frame["bucket_start"].min()
+                test_window_end = temporal_split.test_frame["bucket_start"].max()
                 for model_name, factory in model_factories.items():
                     model = factory()
-                    model.fit(full_history)
+                    try:
+                        model.fit(full_history)
+                    except Exception as exc:
+                        self.logger.warning(
+                            "Skipping production fit for %s / %s=%s / model=%s because fitting failed: %s",
+                            frequency,
+                            segment_type,
+                            segment_id,
+                            model_name,
+                            exc,
+                        )
+                        continue
                     trained_models[model_name] = model
                     model_registry_rows.append(
                         {
@@ -442,15 +492,20 @@ class ForecastingPipeline:
                             "segment_type": segment_type,
                             "segment_id": str(segment_id),
                             "version": "v2",
-                            "training_window_start": temporal_split.train_frame["bucket_start"].min(),
-                            "training_window_end": temporal_split.train_frame["bucket_start"].max(),
-                            "validation_window_start": temporal_split.validation_frame["bucket_start"].min(),
-                            "validation_window_end": temporal_split.validation_frame["bucket_start"].max(),
-                            "test_window_start": temporal_split.test_frame["bucket_start"].min(),
-                            "test_window_end": temporal_split.test_frame["bucket_start"].max(),
+                            "training_window_start": full_fit_window_start,
+                            "training_window_end": full_fit_window_end,
+                            "selection_train_window_start": selection_train_window_start,
+                            "selection_train_window_end": selection_train_window_end,
+                            "validation_window_start": validation_window_start,
+                            "validation_window_end": validation_window_end,
+                            "test_window_start": test_window_start,
+                            "test_window_end": test_window_end,
                             "trained_at": pd.Timestamp.utcnow(),
                             "pipeline_run_id": pipeline_run_id,
-                            "parameters_json": {"ensemble_weights": ensemble_weights if model_name == "weighted_ensemble" else None},
+                            "parameters_json": {
+                                "ensemble_weights": ensemble_weights if model_name == "weighted_ensemble" else None,
+                                "fit_strategy": "full_history_refit_after_validation_and_test_for_future_forecasting",
+                            },
                         }
                     )
 
@@ -472,15 +527,20 @@ class ForecastingPipeline:
                             "segment_type": segment_type,
                             "segment_id": str(segment_id),
                             "version": "v2",
-                            "training_window_start": temporal_split.train_frame["bucket_start"].min(),
-                            "training_window_end": temporal_split.train_frame["bucket_start"].max(),
-                            "validation_window_start": temporal_split.validation_frame["bucket_start"].min(),
-                            "validation_window_end": temporal_split.validation_frame["bucket_start"].max(),
-                            "test_window_start": temporal_split.test_frame["bucket_start"].min(),
-                            "test_window_end": temporal_split.test_frame["bucket_start"].max(),
+                            "training_window_start": full_fit_window_start,
+                            "training_window_end": full_fit_window_end,
+                            "selection_train_window_start": selection_train_window_start,
+                            "selection_train_window_end": selection_train_window_end,
+                            "validation_window_start": validation_window_start,
+                            "validation_window_end": validation_window_end,
+                            "test_window_start": test_window_start,
+                            "test_window_end": test_window_end,
                             "trained_at": pd.Timestamp.utcnow(),
                             "pipeline_run_id": pipeline_run_id,
-                            "parameters_json": {"ensemble_weights": ensemble_weights},
+                            "parameters_json": {
+                                "ensemble_weights": ensemble_weights,
+                                "fit_strategy": "weighted_ensemble_refit_from_full_history_member_forecasts",
+                            },
                         }
                     )
 
@@ -500,6 +560,19 @@ class ForecastingPipeline:
                     forecast_interval_rows.extend(prepared["intervals"])
 
                 champion_name = champion.iloc[0]["model_name"]
+                if champion_name not in base_forecasts:
+                    available_ranked = validation_summary.loc[
+                        validation_summary["model_name"].isin(base_forecasts.keys())
+                    ].sort_values("composite_score")
+                    if available_ranked.empty:
+                        self.logger.warning(
+                            "Skipping future forecast output for %s / %s=%s because no production models completed successfully.",
+                            frequency,
+                            segment_type,
+                            segment_id,
+                        )
+                        continue
+                    champion_name = available_ranked.iloc[0]["model_name"]
                 champion_forecast = base_forecasts[champion_name].copy()
                 if segment_type == "system_total" and str(segment_id) == "all":
                     frequency_forecast_inputs["total_champion_forecast"] = champion_forecast
@@ -552,6 +625,7 @@ class ForecastingPipeline:
         drift_df = self._prepare_monitoring_rows(pd.concat(drift_rows, ignore_index=True)) if drift_rows else pd.DataFrame()
         station_profiles_df = pd.concat(station_profile_rows, ignore_index=True) if station_profile_rows else pd.DataFrame()
         reconciliation_df = pd.concat(reconciliation_rows, ignore_index=True) if reconciliation_rows else pd.DataFrame()
+        evaluation_summary_frames = self._build_evaluation_summaries(evaluation_metrics_df, station_profiles_df)
 
         self._persist_if_configured("model_registry", model_registry_df, ["model_id"])
         self._persist_if_configured("forecast_outputs", forecast_outputs_df, ["forecast_id"])
@@ -578,6 +652,7 @@ class ForecastingPipeline:
             "drift_monitoring": drift_df,
             "station_profiles": station_profiles_df,
             "reconciliation_outputs": reconciliation_df,
+            **evaluation_summary_frames,
             "backtest_predictions": evaluation_predictions_df.loc[evaluation_predictions_df["window_role"] == "rolling_backtest"].copy()
             if not evaluation_predictions_df.empty else pd.DataFrame(),
         }))
@@ -599,6 +674,7 @@ class ForecastingPipeline:
                 "step_map": {frequency: self.settings.step_for(frequency) for frequency in self.settings.frequencies},
                 "station_level_top_n": self.settings.station_level_top_n,
                 "station_level_frequencies": list(self.settings.station_level_frequencies),
+                "station_enabled_models": list(self.settings.station_enabled_models),
             },
         }
         summary_path = self.settings.outputs_reports_dir / f"{pipeline_run_id}_summary.json"
@@ -643,7 +719,7 @@ class ForecastingPipeline:
             regime_reference = daily_total
         return derive_regime_definition(regime_reference, self.settings)
 
-    def _build_model_factories(self, frequency: str, regime_definition) -> dict[str, Callable[[], object]]:
+    def _build_model_factories(self, frequency: str, regime_definition, segment_type: str) -> dict[str, Callable[[], object]]:
         factories = {
             "naive": lambda: NaiveForecaster(frequency),
             "seasonal_naive": lambda: SeasonalNaiveForecaster(frequency),
@@ -651,7 +727,14 @@ class ForecastingPipeline:
             "count_glm": lambda: CountGLMForecaster(frequency, regime_definition, self.settings.holiday_country),
             "sarimax_fourier": lambda: SarimaxFourierForecaster(frequency, regime_definition, self.settings.holiday_country),
         }
-        return {name: factory for name, factory in factories.items() if name in self.settings.enabled_models}
+        enabled_models = self.settings.enabled_models
+        if segment_type == "start_station":
+            enabled_models = tuple(
+                model_name
+                for model_name in self.settings.station_enabled_models
+                if model_name in self.settings.enabled_models
+            )
+        return {name: factory for name, factory in factories.items() if name in enabled_models}
 
     def _build_backtest_config(self, frequency: str, train_frame: pd.DataFrame) -> BacktestConfig | None:
         horizon = self.settings.horizon_for(frequency)
@@ -789,7 +872,9 @@ class ForecastingPipeline:
         forecast_frame["horizon"] = range(1, len(forecast_frame) + 1)
         if temporal_split is not None:
             forecast_frame["training_window_start"] = temporal_split.train_frame["bucket_start"].min()
-            forecast_frame["training_window_end"] = temporal_split.train_frame["bucket_start"].max()
+            forecast_frame["training_window_end"] = temporal_split.test_frame["bucket_start"].max()
+            forecast_frame["selection_train_window_start"] = temporal_split.train_frame["bucket_start"].min()
+            forecast_frame["selection_train_window_end"] = temporal_split.train_frame["bucket_start"].max()
             forecast_frame["validation_window_start"] = temporal_split.validation_frame["bucket_start"].min()
             forecast_frame["validation_window_end"] = temporal_split.validation_frame["bucket_start"].max()
             forecast_frame["test_window_start"] = temporal_split.test_frame["bucket_start"].min()
@@ -798,6 +883,8 @@ class ForecastingPipeline:
             for column in (
                 "training_window_start",
                 "training_window_end",
+                "selection_train_window_start",
+                "selection_train_window_end",
                 "validation_window_start",
                 "validation_window_end",
                 "test_window_start",
@@ -821,6 +908,8 @@ class ForecastingPipeline:
                 "horizon",
                 "training_window_start",
                 "training_window_end",
+                "selection_train_window_start",
+                "selection_train_window_end",
                 "validation_window_start",
                 "validation_window_end",
                 "test_window_start",
@@ -939,6 +1028,99 @@ class ForecastingPipeline:
         if not station_forecasts.empty:
             station_forecasts["model_name"] = "reconciled_station_hybrid"
         return pd.DataFrame(reconciliation_rows), station_forecasts
+
+    def _build_evaluation_summaries(
+        self,
+        evaluation_metrics_df: pd.DataFrame,
+        station_profiles_df: pd.DataFrame,
+    ) -> dict[str, pd.DataFrame]:
+        if evaluation_metrics_df.empty:
+            return {}
+
+        station_lookup = pd.DataFrame()
+        if not station_profiles_df.empty:
+            station_lookup = station_profiles_df[
+                ["frequency", "station_id", "total_trip_count", "recent_share", "volume_tier"]
+            ].rename(columns={"station_id": "segment_id"})
+
+        def enrich_weights(frame: pd.DataFrame) -> pd.DataFrame:
+            enriched = frame.copy()
+            if not station_lookup.empty and "segment_id" in enriched.columns:
+                enriched["segment_id"] = enriched["segment_id"].astype(str)
+                enriched = enriched.merge(station_lookup, on=["frequency", "segment_id"], how="left")
+            else:
+                enriched["total_trip_count"] = np.nan
+                enriched["recent_share"] = np.nan
+                enriched["volume_tier"] = None
+            enriched["segment_weight"] = enriched["total_trip_count"].fillna(1.0)
+            enriched["volume_tier"] = enriched["volume_tier"].fillna("not_applicable")
+            return enriched
+
+        overall = enrich_weights(
+            evaluation_metrics_df.loc[evaluation_metrics_df["metric_scope"] == "overall"].copy()
+        )
+        horizon = enrich_weights(
+            evaluation_metrics_df.loc[evaluation_metrics_df["metric_scope"] == "horizon_bucket"].copy()
+        )
+        regime = enrich_weights(
+            evaluation_metrics_df.loc[evaluation_metrics_df["metric_scope"] == "regime"].copy()
+        )
+
+        frames: dict[str, pd.DataFrame] = {}
+        if not overall.empty:
+            frames["segment_evaluation_summary"] = self._summarize_metric_frame(
+                overall,
+                group_cols=["window_role", "frequency", "segment_type", "model_name"],
+                weight_col="segment_weight",
+            )
+            station_overall = overall.loc[overall["segment_type"] == "start_station"].copy()
+            if not station_overall.empty:
+                frames["station_tier_evaluation_summary"] = self._summarize_metric_frame(
+                    station_overall,
+                    group_cols=["window_role", "frequency", "model_name", "volume_tier"],
+                    weight_col="segment_weight",
+                )
+
+        if not horizon.empty:
+            frames["horizon_evaluation_summary"] = self._summarize_metric_frame(
+                horizon,
+                group_cols=["window_role", "frequency", "segment_type", "model_name", "horizon_bucket"],
+                weight_col="segment_weight",
+            )
+
+        if not regime.empty:
+            frames["regime_evaluation_summary"] = self._summarize_metric_frame(
+                regime,
+                group_cols=["window_role", "frequency", "segment_type", "model_name", "evaluation_regime"],
+                weight_col="segment_weight",
+            )
+
+        return frames
+
+    @staticmethod
+    def _summarize_metric_frame(
+        metric_frame: pd.DataFrame,
+        group_cols: list[str],
+        weight_col: str,
+    ) -> pd.DataFrame:
+        if metric_frame.empty:
+            return pd.DataFrame()
+
+        rows: list[dict[str, object]] = []
+        for keys, group in metric_frame.groupby(group_cols, dropna=False):
+            if not isinstance(keys, tuple):
+                keys = (keys,)
+            row = dict(zip(group_cols, keys))
+            row["metric_row_count"] = len(group)
+            row["segment_count"] = group["segment_id"].astype(str).nunique() if "segment_id" in group.columns else len(group)
+            for column in SUMMARY_METRIC_COLUMNS:
+                if column not in group.columns:
+                    continue
+                row[f"macro_{column}"] = float(pd.to_numeric(group[column], errors="coerce").mean())
+                row[f"weighted_{column}"] = _safe_weighted_mean(group[column], group[weight_col])
+            rows.append(row)
+
+        return pd.DataFrame(rows).sort_values(group_cols).reset_index(drop=True)
 
     def _write_artifacts(self, pipeline_run_id: str, frames: dict[str, pd.DataFrame]) -> dict[str, str]:
         artifact_paths: dict[str, str] = {}

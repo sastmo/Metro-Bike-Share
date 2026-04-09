@@ -22,12 +22,20 @@ PLOT_EXPLANATIONS = {
 }
 
 
-def _run_pipeline(frequencies: list[str], max_backtest_folds: int, persist_to_postgres: bool) -> dict[str, Any]:
+def _run_pipeline(
+    frequencies: list[str],
+    max_backtest_folds: int,
+    persist_to_postgres: bool,
+    station_level_top_n: int,
+    station_level_frequencies: list[str],
+) -> dict[str, Any]:
     settings = get_settings()
     env = os.environ.copy()
     env["PYTHONPATH"] = str(settings.project_root / "src")
     env["FREQUENCIES"] = ",".join(frequencies)
     env["MAX_BACKTEST_FOLDS"] = str(max_backtest_folds)
+    env["STATION_LEVEL_TOP_N"] = str(station_level_top_n)
+    env["STATION_LEVEL_FREQUENCIES"] = ",".join(station_level_frequencies)
     if not persist_to_postgres:
         env["POSTGRES_URL"] = ""
 
@@ -133,6 +141,10 @@ def _ensure_segment_columns(frame: pd.DataFrame) -> pd.DataFrame:
         normalized["segment_id"] = "all"
     normalized["segment_id"] = normalized["segment_id"].astype(str)
     return normalized
+
+
+def _has_columns(frame: pd.DataFrame, required: list[str]) -> bool:
+    return not frame.empty and set(required).issubset(frame.columns)
 
 
 def _split_diagnostics_key(key: str, summary_row: dict[str, Any]) -> tuple[str, str, str]:
@@ -479,6 +491,10 @@ def _render_evaluation(st, context: dict[str, Any], settings) -> None:
     backtest_summary = _ensure_segment_columns(context["backtest_summary"])
     validation_summary = _ensure_segment_columns(context.get("validation_summary", pd.DataFrame()))
     test_summary = _ensure_segment_columns(context.get("test_summary", pd.DataFrame()))
+    segment_evaluation_summary = _ensure_segment_columns(context.get("segment_evaluation_summary", pd.DataFrame()))
+    station_tier_evaluation_summary = context.get("station_tier_evaluation_summary", pd.DataFrame()).copy()
+    horizon_evaluation_summary = _ensure_segment_columns(context.get("horizon_evaluation_summary", pd.DataFrame()))
+    regime_evaluation_summary = _ensure_segment_columns(context.get("regime_evaluation_summary", pd.DataFrame()))
     evaluation_predictions = _ensure_segment_columns(context.get("evaluation_predictions", pd.DataFrame()))
     backtest_predictions = _ensure_segment_columns(context["backtest_predictions"])
     backtest_folds = _ensure_segment_columns(context["backtest_folds"])
@@ -637,6 +653,131 @@ def _render_evaluation(st, context: dict[str, Any], settings) -> None:
         hide_index=True,
     )
 
+    segment_summary = pd.DataFrame()
+    if _has_columns(segment_evaluation_summary, ["window_role", "frequency", "segment_type"]):
+        segment_summary = segment_evaluation_summary.loc[
+            (segment_evaluation_summary["window_role"] == selected_role)
+            & (segment_evaluation_summary["frequency"] == selected_frequency)
+            & (segment_evaluation_summary["segment_type"] == segment_type)
+        ].copy()
+    if not segment_summary.empty:
+        st.subheader("Aggregated Segment Summary")
+        st.dataframe(
+            segment_summary[
+                [
+                    column
+                    for column in [
+                        "model_name",
+                        "segment_type",
+                        "metric_row_count",
+                        "segment_count",
+                        "macro_mae",
+                        "weighted_mae",
+                        "macro_rmse",
+                        "weighted_rmse",
+                        "macro_coverage_80",
+                        "weighted_coverage_80",
+                        "macro_coverage_95",
+                        "weighted_coverage_95",
+                    ]
+                    if column in segment_summary.columns
+                ]
+            ].sort_values("weighted_mae" if "weighted_mae" in segment_summary.columns else "macro_mae"),
+            width="stretch",
+            hide_index=True,
+        )
+
+    if segment_type == "start_station" and _has_columns(station_tier_evaluation_summary, ["window_role", "frequency"]):
+        tier_summary = station_tier_evaluation_summary.loc[
+            (station_tier_evaluation_summary["window_role"] == selected_role)
+            & (station_tier_evaluation_summary["frequency"] == selected_frequency)
+        ].copy()
+        if not tier_summary.empty:
+            st.subheader("Station Tier Summary")
+            st.dataframe(
+                tier_summary[
+                    [
+                        column
+                        for column in [
+                            "model_name",
+                            "volume_tier",
+                            "segment_count",
+                            "macro_mae",
+                            "weighted_mae",
+                            "macro_rmse",
+                            "weighted_rmse",
+                            "macro_coverage_80",
+                            "weighted_coverage_80",
+                            "macro_bias",
+                            "weighted_bias",
+                        ]
+                        if column in tier_summary.columns
+                    ]
+                ].sort_values(["volume_tier", "weighted_mae" if "weighted_mae" in tier_summary.columns else "macro_mae"]),
+                width="stretch",
+                hide_index=True,
+            )
+
+    if _has_columns(horizon_evaluation_summary, ["window_role", "frequency", "segment_type"]):
+        horizon_summary = horizon_evaluation_summary.loc[
+            (horizon_evaluation_summary["window_role"] == selected_role)
+            & (horizon_evaluation_summary["frequency"] == selected_frequency)
+            & (horizon_evaluation_summary["segment_type"] == segment_type)
+        ].copy()
+        if not horizon_summary.empty:
+            st.subheader("Horizon Bucket Summary")
+            st.dataframe(
+                horizon_summary[
+                    [
+                        column
+                        for column in [
+                            "model_name",
+                            "horizon_bucket",
+                            "macro_mae",
+                            "weighted_mae",
+                            "macro_rmse",
+                            "weighted_rmse",
+                            "macro_coverage_80",
+                            "weighted_coverage_80",
+                        ]
+                        if column in horizon_summary.columns
+                    ]
+                ].sort_values(["horizon_bucket", "weighted_mae" if "weighted_mae" in horizon_summary.columns else "macro_mae"]),
+                width="stretch",
+                hide_index=True,
+            )
+
+    if _has_columns(regime_evaluation_summary, ["window_role", "frequency", "segment_type"]):
+        regime_summary = regime_evaluation_summary.loc[
+            (regime_evaluation_summary["window_role"] == selected_role)
+            & (regime_evaluation_summary["frequency"] == selected_frequency)
+            & (regime_evaluation_summary["segment_type"] == segment_type)
+        ].copy()
+        if not regime_summary.empty:
+            st.subheader("Regime Summary")
+            st.dataframe(
+                regime_summary[
+                    [
+                        column
+                        for column in [
+                            "model_name",
+                            "evaluation_regime",
+                            "macro_mae",
+                            "weighted_mae",
+                            "macro_rmse",
+                            "weighted_rmse",
+                            "macro_coverage_80",
+                            "weighted_coverage_80",
+                            "macro_bias",
+                            "weighted_bias",
+                        ]
+                        if column in regime_summary.columns
+                    ]
+                ].sort_values(["evaluation_regime", "weighted_mae" if "weighted_mae" in regime_summary.columns else "macro_mae"]),
+                width="stretch",
+                hide_index=True,
+            )
+
 
 def _render_forecasts(st, context: dict[str, Any]) -> None:
     forecast_outputs = _ensure_segment_columns(context["forecast_outputs"])
@@ -646,7 +787,8 @@ def _render_forecasts(st, context: dict[str, Any]) -> None:
 
     st.markdown(
         '<div class="section-note">This tab shows future forecasts after the selected models were refit on all available history. '
-        "Use the Evaluation tab to judge held-out performance. Use this tab to compare the final production-style forecasts.</div>",
+        "Use the Evaluation tab to judge held-out performance. Use this tab to compare the final production-style forecasts. "
+        "`training_window_*` shows the final refit history, while `selection_train_window_*` shows the earlier slice used before validation and test.</div>",
         unsafe_allow_html=True,
     )
 
@@ -669,6 +811,8 @@ def _render_forecasts(st, context: dict[str, Any]) -> None:
                         "horizon",
                         "training_window_start",
                         "training_window_end",
+                        "selection_train_window_start",
+                        "selection_train_window_end",
                         "trained_at",
                     ]
                     if column in model_registry.columns
@@ -835,6 +979,8 @@ def _render_diagnostics(st, context: dict[str, Any]) -> None:
 
 def _render_segment_explorer(st, context: dict[str, Any]) -> None:
     aggregate_frames = context["aggregate_frames"]
+    forecast_outputs = _ensure_segment_columns(context.get("forecast_outputs", pd.DataFrame()))
+    forecast_intervals = context.get("forecast_intervals", pd.DataFrame()).copy()
     station_coordinates = context.get("station_coordinates", pd.DataFrame()).copy()
     if not aggregate_frames:
         st.info("No processed aggregate files are available yet.")
@@ -899,7 +1045,9 @@ def _render_segment_explorer(st, context: dict[str, Any]) -> None:
                 initial_view_state=view_state,
                 tooltip=tooltip,
                 map_style="light",
-            )
+            ),
+            use_container_width=False,
+            height=520,
         )
         st.caption("Circle size represents cumulative demand for the selected frequency across the top stations.")
     elif top_station_totals.empty:
@@ -945,6 +1093,54 @@ def _render_segment_explorer(st, context: dict[str, Any]) -> None:
         "In v2, high-priority stations can be modeled directly while the rest stay in the hierarchy through share allocation and reconciliation.</div>",
         unsafe_allow_html=True,
     )
+
+    forecast_subset = forecast_outputs.loc[
+        (forecast_outputs["frequency"] == selected_frequency)
+        & (forecast_outputs["segment_type"] == scope)
+        & (forecast_outputs["segment_id"].astype(str) == str(segment_id))
+    ].copy()
+    if not forecast_subset.empty:
+        st.subheader("Future Forecast Snapshot")
+        forecast_models = sorted(forecast_subset["model_name"].dropna().unique().tolist())
+        selected_model = st.selectbox(
+            "Forecast model for this segment",
+            forecast_models,
+            key=f"segment_forecast_model_{selected_frequency}_{scope}_{segment_id}",
+        )
+        interval_view = _build_interval_view(
+            forecast_outputs,
+            forecast_intervals,
+            selected_frequency,
+            selected_model,
+            scope,
+            str(segment_id),
+        )
+        if not interval_view.empty:
+            st.line_chart(
+                interval_view[["target_timestamp", "prediction"]]
+                .rename(columns={"target_timestamp": "timestamp", "prediction": selected_model})
+                .set_index("timestamp"),
+                width="stretch",
+            )
+            st.dataframe(
+                interval_view[
+                    [
+                        column
+                        for column in [
+                            "target_timestamp",
+                            "prediction",
+                            "lower_bound_80",
+                            "upper_bound_80",
+                            "lower_bound_95",
+                            "upper_bound_95",
+                            "horizon",
+                        ]
+                        if column in interval_view.columns
+                    ]
+                ],
+                width="stretch",
+                hide_index=True,
+            )
 
 
 def _render_artifacts(st, context: dict[str, Any]) -> None:
@@ -995,6 +1191,20 @@ def main() -> None:
             step=1,
             help="A fold is one rolling time-based evaluation window. More folds mean broader historical testing but slower runs.",
         )
+        station_level_top_n = st.number_input(
+            "Direct Station Models (Top N)",
+            min_value=0,
+            max_value=100,
+            value=settings.station_level_top_n,
+            step=1,
+            help="High-priority stations to model directly. Remaining stations stay in the hierarchy through share allocation and reconciliation.",
+        )
+        station_level_frequencies = st.multiselect(
+            "Station-Level Frequencies",
+            options=["hourly", "daily", "weekly"],
+            default=list(settings.station_level_frequencies),
+            help="Only these frequencies train direct station models.",
+        )
         persist_to_postgres = st.checkbox(
             "Persist to PostgreSQL",
             value=bool(settings.postgres_url),
@@ -1002,7 +1212,13 @@ def main() -> None:
         )
         if st.button("Run Pipeline", width="stretch"):
             with st.spinner("Running forecasting pipeline..."):
-                result = _run_pipeline(selected_frequencies or ["daily"], int(max_backtest_folds), persist_to_postgres)
+                result = _run_pipeline(
+                    selected_frequencies or ["daily"],
+                    int(max_backtest_folds),
+                    persist_to_postgres,
+                    int(station_level_top_n),
+                    station_level_frequencies,
+                )
             if result["returncode"] == 0:
                 st.success("Pipeline completed. Refreshing dashboard artifacts.")
                 with st.expander("Pipeline stdout", expanded=False):

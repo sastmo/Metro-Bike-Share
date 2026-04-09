@@ -10,6 +10,103 @@ from metro_bike_share_forecasting.forecasting.base import BaseForecaster
 from metro_bike_share_forecasting.utils.time import build_future_index
 
 
+GLM_CATEGORICAL_FEATURES = {
+    "hourly": ["hour_of_day", "day_of_week", "pandemic_phase"],
+    "daily": ["day_of_week", "month", "pandemic_phase"],
+    "weekly": ["month", "pandemic_phase"],
+    "monthly": ["month", "pandemic_phase"],
+    "quarterly": ["quarter", "pandemic_phase"],
+}
+
+
+GLM_NUMERIC_FEATURES = {
+    "hourly": [
+        "is_weekend",
+        "is_holiday",
+        "lag_1",
+        "lag_24",
+        "lag_168",
+        "rolling_mean_24",
+        "rolling_mean_168",
+        "rolling_std_24",
+        "rolling_std_168",
+        "is_lockdown",
+        "is_reopening",
+        "is_post_pandemic",
+        "days_since_lockdown_start",
+        "days_since_reopening_start",
+        "missing_period_flag",
+        "recency_weight",
+    ],
+    "daily": [
+        "is_weekend",
+        "is_holiday",
+        "lag_1",
+        "lag_7",
+        "lag_28",
+        "rolling_mean_7",
+        "rolling_mean_28",
+        "rolling_std_7",
+        "rolling_std_28",
+        "is_lockdown",
+        "is_reopening",
+        "is_post_pandemic",
+        "days_since_lockdown_start",
+        "days_since_reopening_start",
+        "missing_period_flag",
+        "recency_weight",
+    ],
+    "weekly": [
+        "lag_1",
+        "lag_4",
+        "lag_12",
+        "rolling_mean_4",
+        "rolling_mean_12",
+        "rolling_std_4",
+        "rolling_std_12",
+        "is_lockdown",
+        "is_reopening",
+        "is_post_pandemic",
+        "days_since_lockdown_start",
+        "days_since_reopening_start",
+        "missing_period_flag",
+        "recency_weight",
+    ],
+    "monthly": [
+        "lag_1",
+        "lag_3",
+        "lag_12",
+        "rolling_mean_3",
+        "rolling_mean_12",
+        "rolling_std_3",
+        "rolling_std_12",
+        "is_lockdown",
+        "is_reopening",
+        "is_post_pandemic",
+        "days_since_lockdown_start",
+        "days_since_reopening_start",
+        "missing_period_flag",
+        "recency_weight",
+    ],
+    "quarterly": [
+        "lag_1",
+        "lag_2",
+        "lag_4",
+        "rolling_mean_2",
+        "rolling_mean_4",
+        "rolling_std_2",
+        "rolling_std_4",
+        "is_lockdown",
+        "is_reopening",
+        "is_post_pandemic",
+        "days_since_lockdown_start",
+        "days_since_reopening_start",
+        "missing_period_flag",
+        "recency_weight",
+    ],
+}
+
+
 class CountGLMForecaster(BaseForecaster):
     def __init__(self, frequency: str, regime_definition, holiday_country: str) -> None:
         self.frequency = frequency
@@ -24,14 +121,19 @@ class CountGLMForecaster(BaseForecaster):
     def _design_matrix(self, frame: pd.DataFrame) -> pd.DataFrame:
         feature_frame = build_feature_store(frame, self.frequency, self.regime_definition, self.holiday_country)
         model_frame = feature_frame.copy()
-        categorical = ["pandemic_phase", "hour_x_phase", "dow_x_phase", "month_x_phase", "weekend_x_phase"]
-        available_categorical = [column for column in categorical if column in model_frame.columns]
-        model_frame = pd.get_dummies(model_frame, columns=available_categorical, dummy_na=False, drop_first=False)
-        excluded = {"target_timestamp", "bucket_end", "generated_at", "feature_payload"}
-        x = model_frame.drop(columns=[column for column in excluded if column in model_frame.columns], errors="ignore")
-        x = x.drop(columns=["trip_count", "segment_type", "segment_id"], errors="ignore")
-        x = x.select_dtypes(include=["number", "bool"]).replace([np.inf, -np.inf], np.nan).fillna(0.0)
-        x = x.astype(float)
+        for column in ("days_since_lockdown_start", "days_since_reopening_start"):
+            if column in model_frame.columns:
+                model_frame[column] = np.log1p(pd.to_numeric(model_frame[column], errors="coerce").clip(lower=0))
+
+        numeric_columns = [column for column in GLM_NUMERIC_FEATURES[self.frequency] if column in model_frame.columns]
+        categorical_columns = [column for column in GLM_CATEGORICAL_FEATURES[self.frequency] if column in model_frame.columns]
+        selected_columns = numeric_columns + categorical_columns
+        x = model_frame[selected_columns].copy()
+        if categorical_columns:
+            x = pd.get_dummies(x, columns=categorical_columns, dummy_na=False, drop_first=True)
+        x = x.replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        x = x.loc[:, x.nunique(dropna=False) > 1]
+        x = x.astype(float).clip(lower=-1e6, upper=1e6)
         return sm.add_constant(x, has_constant="add")
 
     def fit(self, history: pd.DataFrame) -> "CountGLMForecaster":
@@ -40,16 +142,40 @@ class CountGLMForecaster(BaseForecaster):
         target = history["trip_count"].astype(float)
 
         dispersion = float(target.var() / max(target.mean(), 1.0)) if len(target) > 1 else 1.0
+        candidate_families: list[tuple[str, object]] = []
         if dispersion > 1.5:
-            self.family_name = "negative_binomial"
             self.alpha = max((target.var() - target.mean()) / max(target.mean() ** 2, 1.0), 1e-6)
-            family = sm.families.NegativeBinomial(alpha=self.alpha)
-        else:
+            candidate_families.append(("negative_binomial", sm.families.NegativeBinomial(alpha=self.alpha)))
+        candidate_families.append(("poisson", sm.families.Poisson()))
+
+        last_error: Exception | None = None
+        for family_name, family in candidate_families:
+            try:
+                self.result = sm.GLM(target, design_matrix, family=family).fit(maxiter=200, tol=1e-8)
+                self.family_name = family_name
+                if family_name != "negative_binomial":
+                    self.alpha = 0.0
+                self.feature_columns = design_matrix.columns.tolist()
+                return self
+            except Exception as exc:  # pragma: no cover - exercised by real data fallback
+                last_error = exc
+
+        try:
+            regularized = sm.GLM(target, design_matrix, family=sm.families.Poisson()).fit_regularized(
+                alpha=0.01,
+                L1_wt=0.0,
+                maxiter=500,
+            )
+            self.result = regularized
             self.family_name = "poisson"
             self.alpha = 0.0
-            family = sm.families.Poisson()
+            self.feature_columns = design_matrix.columns.tolist()
+            return self
+        except Exception as exc:  # pragma: no cover - exercised by real data fallback
+            last_error = exc
 
-        self.result = sm.GLM(target, design_matrix, family=family).fit()
+        if last_error is not None:
+            raise last_error
         self.feature_columns = design_matrix.columns.tolist()
         return self
 
