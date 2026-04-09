@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Callable, Dict
 
@@ -7,6 +8,9 @@ import pandas as pd
 
 from metro_bike_share_forecasting.evaluation.scoring import score_prediction_frame
 from metro_bike_share_forecasting.utils.time import infer_season_length
+
+
+LOGGER = logging.getLogger("metro_bike_share_forecasting")
 
 
 @dataclass
@@ -97,15 +101,25 @@ def run_backtest(
 
     for fold_id, train, test in generate_rolling_folds(frame, config):
         for model_name, factory in model_factories.items():
-            joined = _forecast_holdout(
-                history=train,
-                holdout=test,
-                model_name=model_name,
-                factory=factory,
-                frequency=config.frequency,
-                fold_id=fold_id,
-                window_role="rolling_backtest",
-            )
+            try:
+                joined = _forecast_holdout(
+                    history=train,
+                    holdout=test,
+                    model_name=model_name,
+                    factory=factory,
+                    frequency=config.frequency,
+                    fold_id=fold_id,
+                    window_role="rolling_backtest",
+                )
+            except Exception as exc:
+                LOGGER.warning(
+                    "Skipping rolling backtest model %s for %s fold %s because fitting or forecasting failed: %s",
+                    model_name,
+                    config.frequency,
+                    fold_id,
+                    exc,
+                )
+                continue
             prediction_rows.append(joined)
             metric_rows.append(
                 score_prediction_frame(
@@ -144,15 +158,25 @@ def evaluate_holdout(
     prediction_rows: list[pd.DataFrame] = []
     metric_rows: list[pd.DataFrame] = []
     for model_name, factory in model_factories.items():
-        joined = _forecast_holdout(
-            history=ordered_train,
-            holdout=ordered_holdout,
-            model_name=model_name,
-            factory=factory,
-            frequency=frequency,
-            fold_id=None,
-            window_role=window_role,
-        )
+        try:
+            joined = _forecast_holdout(
+                history=ordered_train,
+                holdout=ordered_holdout,
+                model_name=model_name,
+                factory=factory,
+                frequency=frequency,
+                fold_id=None,
+                window_role=window_role,
+            )
+        except Exception as exc:
+            LOGGER.warning(
+                "Skipping %s holdout model %s for %s because fitting or forecasting failed: %s",
+                window_role,
+                model_name,
+                frequency,
+                exc,
+            )
+            continue
         prediction_rows.append(joined)
         metric_rows.append(
             score_prediction_frame(

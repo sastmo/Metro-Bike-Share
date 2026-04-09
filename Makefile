@@ -1,7 +1,7 @@
 PYTHON ?= python3
 PYTHONPATH ?= src
 
-.PHONY: validate test inspect-base run-full run-daily-fast bootstrap studio
+.PHONY: validate test inspect-base run-full run-daily-fast run-daily-station bootstrap studio
 
 validate:
 	$(PYTHON) scripts/validate_repo.py
@@ -17,6 +17,9 @@ run-full:
 
 run-daily-fast:
 	PYTHONPATH=$(PYTHONPATH) FREQUENCIES=daily MAX_BACKTEST_FOLDS=2 STATION_LEVEL_TOP_N=3 $(PYTHON) -m metro_bike_share_forecasting.cli run-full-pipeline
+
+run-daily-station:
+	PYTHONPATH=$(PYTHONPATH) FREQUENCIES=daily MAX_BACKTEST_FOLDS=8 STATION_LEVEL_TOP_N=5 STATION_LEVEL_FREQUENCIES=daily STATION_ENABLED_MODELS=naive,seasonal_naive,rolling_mean,count_glm $(PYTHON) -m metro_bike_share_forecasting.cli run-full-pipeline
 
 bootstrap:
 	$(PYTHON) scripts/bootstrap.py --prepare

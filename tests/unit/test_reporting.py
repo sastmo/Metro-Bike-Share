@@ -77,6 +77,8 @@ class ReportingTests(unittest.TestCase):
                 "*_forecast_outputs.csv",
                 parse_dates=[
                     "target_timestamp",
+                    "selection_train_window_start",
+                    "selection_train_window_end",
                     "validation_window_start",
                     "validation_window_end",
                     "test_window_start",

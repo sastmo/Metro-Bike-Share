@@ -196,6 +196,8 @@ def build_dashboard_context(project_root: Path) -> dict[str, Any]:
                 "generated_at",
                 "training_window_start",
                 "training_window_end",
+                "selection_train_window_start",
+                "selection_train_window_end",
                 "validation_window_start",
                 "validation_window_end",
                 "test_window_start",
@@ -211,6 +213,8 @@ def build_dashboard_context(project_root: Path) -> dict[str, Any]:
             parse_dates=[
                 "training_window_start",
                 "training_window_end",
+                "selection_train_window_start",
+                "selection_train_window_end",
                 "validation_window_start",
                 "validation_window_end",
                 "test_window_start",
@@ -219,6 +223,30 @@ def build_dashboard_context(project_root: Path) -> dict[str, Any]:
             ],
         ),
         "station_profiles": load_csv_artifact(summary, "station_profiles", reports_dir, "*_station_profiles.csv"),
+        "segment_evaluation_summary": load_csv_artifact(
+            summary,
+            "segment_evaluation_summary",
+            reports_dir,
+            "*_segment_evaluation_summary.csv",
+        ),
+        "station_tier_evaluation_summary": load_csv_artifact(
+            summary,
+            "station_tier_evaluation_summary",
+            reports_dir,
+            "*_station_tier_evaluation_summary.csv",
+        ),
+        "horizon_evaluation_summary": load_csv_artifact(
+            summary,
+            "horizon_evaluation_summary",
+            reports_dir,
+            "*_horizon_evaluation_summary.csv",
+        ),
+        "regime_evaluation_summary": load_csv_artifact(
+            summary,
+            "regime_evaluation_summary",
+            reports_dir,
+            "*_regime_evaluation_summary.csv",
+        ),
         "reconciliation_outputs": load_csv_artifact(
             summary,
             "reconciliation_outputs",
